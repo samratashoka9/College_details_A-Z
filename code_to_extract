@@ -1,0 +1,49 @@
+import requests
+from bs4 import BeautifulSoup
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0',
+}
+
+r = requests.get("https://www.inflibnet.ac.in/universitydirectory/browse.php?alpha=A", headers=headers)
+soup = BeautifulSoup(r.content, 'html.parser')
+
+# Find all university entries
+universities = soup.find_all('div', class_='uniList_box')
+
+# Iterate over each university entry and extract relevant details
+for university in universities:
+    # Extract university name
+    uni_title_elem = university.find('h3', class_='uni_title')
+    uni_title = uni_title_elem.text.strip() if uni_title_elem else None
+
+    # Extract website URL
+    web_address_elem = university.find('span', class_='web_address')
+    web_address = web_address_elem.a['href'] if web_address_elem and web_address_elem.a else None
+
+    # Extract address
+    uni_address_elem = university.find('p', class_='uni_address')
+    uni_address = uni_address_elem.text.strip() if uni_address_elem else None
+
+    # Extract contact details
+    contact_details = []
+    prof_details = university.find_all('li')
+    for prof in prof_details:
+        designation_elem = prof.find('h6', class_='prof_designation')
+        designation = designation_elem.text.strip() if designation_elem else None
+        name_elem = prof.find('p', class_='prof_name')
+        name = name_elem.text.strip() if name_elem else None
+        phone_elem = prof.find('p', class_='prof_phone')
+        phone = phone_elem.text.strip() if phone_elem else None
+        email_elem = prof.find('h6', class_='prof_email')
+        email = email_elem.a['href'].replace('mailto:', '').strip() if email_elem and email_elem.a else None
+        contact_details.append({'designation': designation, 'name': name, 'phone': phone, 'email': email})
+
+    # Print university details
+    print("University Name:", uni_title)
+    print("Website:", web_address)
+    print("Address:", uni_address)
+    print("Contact Details:")
+    for contact in contact_details:
+        print(contact)
+    print("-" * 50)  # Separator for each university
